@@ -13,7 +13,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  digitalWrite(PA0, LOW);
+  stepper1.movesteps(1000, 1000);
+  stepper1.move(1000);
+
 }
 
 // put function definitions here:
