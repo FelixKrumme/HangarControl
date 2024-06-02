@@ -1,3 +1,16 @@
+/**
+ * @file motor_control.h
+ * @brief This file contains the definition of the StepperMotor class and related constants.
+ *
+ * The StepperMotor class is used to control a stepper motor. It includes
+ * methods for setting the motor's speed, direction, and position, as well as
+ * other configuration parameters. The constants defined in this file are used
+ * to configure the stepper motors.
+ *
+ * @author FelixKrumme
+ * @date 02-06-2024
+ */
+
 #ifndef MOTOR_CONTROL
 #define MOTOR_CONTROL
 
@@ -78,7 +91,7 @@ public:
 
     // void move(int speed);
     void moveByRotationsBlocking(unsigned int rotations);
-    void moveByRotationsBlocking(unsigned int rotations,unsigned int speed);
+    void moveByRotationsBlocking(unsigned int rotations, unsigned int speed);
     void moveByStepsBlocking(unsigned int steps);
     void moveByStepsBlocking(unsigned int steps, unsigned int speed);
 };
