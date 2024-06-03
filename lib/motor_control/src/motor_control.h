@@ -25,7 +25,7 @@
 extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
-const unsigned int kMaxSpeed = 500;
+const unsigned int kMaxSpeed = 1000;
 
 class StepperMotor
 {
@@ -38,11 +38,11 @@ private:
     byte motor_uid_;
     unsigned int micro_step_config_;
     unsigned int steps_per_rotation_;
-    unsigned int step_count_ = 0;
+    unsigned int step_count_;
     // unsigned int remaining_steps_ = 0;
-    unsigned int pulse_count_ = 0;
-    unsigned long current_time = 0;
-    unsigned long passed_time_ = 0;
+    unsigned int pulse_count_;
+    unsigned long current_time;
+    unsigned long passed_time_;
     bool direction_ = false;
     bool togglePulse_ = LOW;
 
@@ -114,7 +114,6 @@ public:
     StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction);
 
     void setGroupSpeed(unsigned int _speed);
-    void setGroupDirection(bool _direction);
     void addMotor(StepperMotor *motor);
 
     void moveGroupByRotations(unsigned int rotations, bool direction);

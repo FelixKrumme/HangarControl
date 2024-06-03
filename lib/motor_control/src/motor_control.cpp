@@ -21,7 +21,7 @@ StepperMotor::StepperMotor(byte _motor_group, byte _motor_position,
     motor_step_pin_ = _motor_step_pin;
     motor_enable_pin_ = _motor_enable_pin;
     motor_uid_ = _motor_position;
-    micro_step_config_ = _micro_step_config;
+    setMicroStepConfig(_micro_step_config);
 };
 
 // With further logic this could be extended to controll multiple motors at once with different speeds etc. however the benefit isnt given at the moment
@@ -55,7 +55,7 @@ void StepperMotor::moveByStepsBlocking(unsigned int steps)
 
 void StepperMotor::moveByStepsBlocking(unsigned int steps, unsigned int speed)
 {
-    for (int i = 0; i < steps; i++)
+    for (unsigned int i = 0; i < steps; i++)
     {
         digitalWrite(motor_step_pin_, HIGH);
         delayMicroseconds(speed);
@@ -84,13 +84,13 @@ void StepperMotor::moveByRotationsBlocking(unsigned int rotations, unsigned int 
 StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction)
 {
     group_id_ = _group_id;
-    setGroupSpeed(_speed);
-    setGroupDirection(_direction);
+    group_speed_ = _speed; // Change to setter function
+    direction_ = _direction;
 };
 
 void StepperGroup::setGroupSpeed(unsigned int _speed)
 {
-    if (_speed > kMaxSpeed)
+    if (_speed < kMaxSpeed)
     {
         group_speed_ = kMaxSpeed;
     }
@@ -105,28 +105,16 @@ void StepperGroup::setGroupSpeed(unsigned int _speed)
     }
 };
 
-void StepperGroup::setGroupDirection(bool _direction)
-{
-    if (_direction == HIGH)
-    {
-        direction_ = HIGH;
-    }
-    else
-    {
-        direction_ = LOW;
-    }
-};
-
 void StepperGroup::addMotor(StepperMotor *motor)
 {
     if (motor_count_ < MAX_MOTORS)
     {
-        if (motor->getMotorGroup() != group_id_)
-        {
-            // Replace with a message through the Communication Interface in serial_communication
-            Serial.println("Motor should not belong to this group or is not set up correctly.");
-            return;
-        };
+        // if (motor->getMotorGroup() != group_id_)
+        // {
+        //     // Replace with a message through the Communication Interface in serial_communication
+        //     Serial.println("Motor should not belong to this group or is not set up correctly.");
+        //     return;
+        // };
         motors[motor_count_] = motor;
         motor_count_++;
         return;
@@ -158,24 +146,41 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
     return;
 };
 
-void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
-{
-    moveGroupBySteps(steps, direction, group_speed_);
-    return;
-};
+// Remove the duplicate function definition
+// void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
+// {
+//     moveGroupBySteps(steps, direction, group_speed_);
+//     return;
+// };
 
 void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed)
 {
     // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
     // oder logik mit interrupt (interrupt wenn keine schritte mehr oder endstop erreicht)
     remaining_steps_ = steps;
-    setGroupSpeed(speed);
-    setGroupDirection(direction);
+    passed_time_ = 0;
+    pulse_count_ = 0;
+    step_count_ = 0;
+    toggle_pulse_ = HIGH;
+    Serial.print("remaining_steps_: ");
+    Serial.println(remaining_steps_);
+    Serial.print("steps: ");
+    Serial.println(steps);
+    group_speed_ = speed;
+    // setGroupSpeed(speed); change line above to this setter (after its fixed)
+    direction_ = direction;
+
+    for (auto i = 0; i < motor_count_; i++)
+            {
+                digitalWrite(motors[i]->getMotorDirectionPin(), direction_);
+            }
+
     while (remaining_steps_ > 0)
     {
-        unsigned long current_time = millis();
+        unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
         {
+            pulse_count_++;
             // A Pulse is completed but only 2 Pulses (High + Low) make a step!
             if (pulse_count_ % 2 == 0)
             {
@@ -186,7 +191,6 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
             toggle_pulse_ = toggle_pulse_ == LOW ? HIGH : LOW;
             for (auto i = 0; i < motor_count_; i++)
             {
-                digitalWrite(motors[i]->getMotorDirectionPin(), direction_);
                 digitalWrite(motors[i]->getMotorStepPin(), toggle_pulse_);
             }
 
