@@ -1,3 +1,16 @@
+/**
+ * @file motor_control.h
+ * @brief This file contains the definition of the StepperMotor class and related constants.
+ *
+ * The StepperMotor class is used to control a stepper motor. It includes
+ * methods for setting the motor's speed, direction, and position, as well as
+ * other configuration parameters. The constants defined in this file are used
+ * to configure the stepper motors.
+ *
+ * @author FelixKrumme
+ * @date 02-06-2024
+ */
+
 #ifndef MOTOR_CONTROL
 #define MOTOR_CONTROL
 
@@ -12,7 +25,7 @@
 extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
-const unsigned int kMaxSpeed = 500;
+const unsigned int kMaxSpeed = 1000;
 
 class StepperMotor
 {
@@ -25,11 +38,11 @@ private:
     byte motor_uid_;
     unsigned int micro_step_config_;
     unsigned int steps_per_rotation_;
-    unsigned int step_count_ = 0;
+    unsigned int step_count_;
     // unsigned int remaining_steps_ = 0;
-    unsigned int pulse_count_ = 0;
-    unsigned long current_time = 0;
-    unsigned long passed_time_ = 0;
+    unsigned int pulse_count_;
+    unsigned long current_time;
+    unsigned long passed_time_;
     bool direction_ = false;
     bool togglePulse_ = LOW;
 
@@ -78,7 +91,7 @@ public:
 
     // void move(int speed);
     void moveByRotationsBlocking(unsigned int rotations);
-    void moveByRotationsBlocking(unsigned int rotations,unsigned int speed);
+    void moveByRotationsBlocking(unsigned int rotations, unsigned int speed);
     void moveByStepsBlocking(unsigned int steps);
     void moveByStepsBlocking(unsigned int steps, unsigned int speed);
 };
@@ -101,7 +114,6 @@ public:
     StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction);
 
     void setGroupSpeed(unsigned int _speed);
-    void setGroupDirection(bool _direction);
     void addMotor(StepperMotor *motor);
 
     void moveGroupByRotations(unsigned int rotations, bool direction);
