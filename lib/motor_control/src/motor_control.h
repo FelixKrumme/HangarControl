@@ -22,6 +22,7 @@
 // All Positions should be viewed in travelling direction!!!
 //
 
+
 extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
@@ -47,7 +48,7 @@ private:
     bool togglePulse_ = LOW;
 
 public:
-    StepperMotor(byte _motor_group, byte _motor_position,
+    StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
                  byte _motor_dir_pin, byte _motor_step_pin,
                  byte _motor_enable_pin,
                  unsigned int _micro_step_config);
@@ -124,6 +125,9 @@ public:
 
     // void moveGroup(); could be used as "non-stopping" movement as a call with a high number
 };
+
+StepperMotor *stepper_motors[8];
+StepperGroup *stepper_group[4];
 
 // Use this Enumerators for assinging a Group to a Motor
 enum motor_group_id

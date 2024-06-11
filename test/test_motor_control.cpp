@@ -2,7 +2,7 @@
 #include "motor_control.h"
 
 void test_setMicroStepConfig_valid(void) {
-    StepperMotor motor(motor_group_plattform, front_left, 12, 13, 14, 2);
+    StepperMotor motor(0, motor_group_plattform, front_left, 12, 13, 14, 2);
 
     // Test with a valid microstep configuration
     int valid_config = 2;
@@ -13,7 +13,7 @@ void test_setMicroStepConfig_valid(void) {
 }
 
 void test_setMicroStepConfig_invalid(void) {
-    StepperMotor motor(motor_group_plattform, front_left, 12, 13, 14, 4);
+    StepperMotor motor(0, motor_group_plattform, front_left, 12, 13, 14, 4);
 
 
     // Test with an invalid microstep configuration

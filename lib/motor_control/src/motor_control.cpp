@@ -10,7 +10,7 @@ const int kStepsPerRotationMicrostepping[15] = {400, 800, 1600, 3200, 6400, 1280
 /// @param _motor_step_pin use the Pin connceted to the STEP/PUL pin of the stepper motor driver
 /// @param _motor_enable_pin use the Pin connceted to the ENABLE pin of the stepper motor driver
 /// @param _micro_step_config use the dividend for the config -> 2 for half steps etc. see the enum or datasheet for allowed values
-StepperMotor::StepperMotor(byte _motor_group, byte _motor_position,
+StepperMotor::StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
                            byte _motor_dir_pin,
                            byte _motor_step_pin,
                            byte _motor_enable_pin, unsigned int _micro_step_config)
@@ -20,7 +20,7 @@ StepperMotor::StepperMotor(byte _motor_group, byte _motor_position,
     motor_dir_pin_ = _motor_dir_pin;
     motor_step_pin_ = _motor_step_pin;
     motor_enable_pin_ = _motor_enable_pin;
-    motor_uid_ = _motor_position;
+    motor_uid_ = _motor_uid;
     micro_step_config_ = _micro_step_config;
 };
 
@@ -55,7 +55,7 @@ void StepperMotor::moveByStepsBlocking(unsigned int steps)
 
 void StepperMotor::moveByStepsBlocking(unsigned int steps, unsigned int speed)
 {
-    for (int i = 0; i < steps; i++)
+    for (unsigned int i = 0; i < steps; i++)
     {
         digitalWrite(motor_step_pin_, HIGH);
         delayMicroseconds(speed);
@@ -158,12 +158,6 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
     return;
 };
 
-void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
-{
-    moveGroupBySteps(steps, direction, group_speed_);
-    return;
-};
-
 void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed)
 {
     // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
@@ -173,7 +167,7 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     setGroupDirection(direction);
     while (remaining_steps_ > 0)
     {
-        unsigned long current_time = millis();
+        unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
         {
             // A Pulse is completed but only 2 Pulses (High + Low) make a step!
