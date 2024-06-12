@@ -55,7 +55,7 @@ void StepperMotor::moveByStepsBlocking(unsigned int steps)
 
 void StepperMotor::moveByStepsBlocking(unsigned int steps, unsigned int speed)
 {
-    for (int i = 0; i < steps; i++)
+    for (unsigned int i = 0; i < steps; i++)
     {
         digitalWrite(motor_step_pin_, HIGH);
         delayMicroseconds(speed);
@@ -92,7 +92,7 @@ void StepperGroup::setGroupSpeed(unsigned int _speed)
 {
     if (_speed > kMaxSpeed)
     {
-        group_speed_ = kMaxSpeed;
+        group_speed_ = _speed;
     }
     else
     {
@@ -158,11 +158,11 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
     return;
 };
 
-void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
-{
-    moveGroupBySteps(steps, direction, group_speed_);
-    return;
-};
+// void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
+// {
+//     moveGroupBySteps(steps, direction, group_speed_);
+//     return;
+// };
 
 void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed)
 {
@@ -171,9 +171,11 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     remaining_steps_ = steps;
     setGroupSpeed(speed);
     setGroupDirection(direction);
+    bool inverted_direction = direction == LOW ? HIGH : LOW;
+
     while (remaining_steps_ > 0)
     {
-        unsigned long current_time = millis();
+        unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
         {
             // A Pulse is completed but only 2 Pulses (High + Low) make a step!
@@ -186,7 +188,23 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
             toggle_pulse_ = toggle_pulse_ == LOW ? HIGH : LOW;
             for (auto i = 0; i < motor_count_; i++)
             {
-                digitalWrite(motors[i]->getMotorDirectionPin(), direction_);
+                // Temporary solution for the (inverted directions of motors on opposite sides.
+                // Serial.println("i: ");
+                // Serial.println(i);
+                // Serial.println("Direction: ");
+                // Serial.println(direction);
+                if (i % 2 == 0)
+                {
+                    digitalWrite(motors[i]->getMotorDirectionPin(), inverted_direction);
+                    // Serial.println("Direction inverted: ");
+                    // Serial.println(direction);
+                }
+                else
+                {
+                    digitalWrite(motors[i]->getMotorDirectionPin(), direction);
+                }
+
+                // digitalWrite(motors[i]->getMotorDirectionPin(), direction);
                 digitalWrite(motors[i]->getMotorStepPin(), toggle_pulse_);
             }
 
