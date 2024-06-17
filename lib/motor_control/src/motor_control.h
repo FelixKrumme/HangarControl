@@ -47,7 +47,7 @@ private:
     bool togglePulse_ = LOW;
 
 public:
-    StepperMotor(byte _motor_group, byte _motor_position,
+    StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
                  byte _motor_dir_pin, byte _motor_step_pin,
                  byte _motor_enable_pin,
                  unsigned int _micro_step_config);
@@ -128,7 +128,7 @@ public:
 // Use this Enumerators for assinging a Group to a Motor
 enum motor_group_id
 {
-    motor_group_plattform,
+    motor_group_leveling,
     motor_group_big_centring,
     motor_group_small_centring,
     motor_group_roof
@@ -152,6 +152,16 @@ enum motor_position
     front_up_left,
     front_up_right
 
+};
+
+enum motor_uid{
+    small_centring = 0,
+    big_centring_front = 1,
+    big_centring_back = 2,
+    leveling_front_left = 3,
+    leveling_front_right = 4,
+    leveling_back_left = 5,
+    leveling_back_right = 6
 };
 
 enum motor_direction

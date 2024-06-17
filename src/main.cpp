@@ -4,27 +4,48 @@
 
 // Put here Interupt Service Routines for Endtriggers
 
-// put function declarations here:
-int myFunction(int, int);
-StepperMotor motor_big_centring_left = StepperMotor(motor_group_big_centring, platform_front_left, 48, 46, 8, 2);
-StepperMotor motor_big_centring_right = StepperMotor(motor_group_big_centring, platform_front_right, 52, 50, 8, 2);
 
-StepperGroup group_big_centring = StepperGroup(1, 1000, HIGH);
+StepperMotor motor_big_centring_front = StepperMotor(big_centring_front,motor_group_big_centring, platform_front_right, 53, 52, 8, 2);
+StepperMotor motor_big_centring_back = StepperMotor(big_centring_back,motor_group_big_centring, platform_back_right, 51, 50, 8, 2);
+
+StepperGroup group_big_centring = StepperGroup(motor_group_big_centring, 4000, HIGH);
+
+
+StepperMotor motor_small_centring = StepperMotor(small_centring,motor_group_small_centring, platform_mid_right, 49, 48, 8, 2);
+
+StepperGroup group_small_centring = StepperGroup(motor_group_small_centring, 4000, HIGH);
+
+
+StepperMotor motor_leveling_front_left = StepperMotor(leveling_front_left,motor_group_leveling, front_left, 47, 46, 8, 2);
+StepperMotor motor_leveling_front_right = StepperMotor(leveling_front_right,motor_group_leveling, front_right, 45, 44, 8, 2);
+StepperMotor motor_leveling_back_left = StepperMotor(leveling_back_left,motor_group_leveling, back_left, 43, 42, 8, 2);
+StepperMotor motor_leveling_back_right = StepperMotor(leveling_back_right,motor_group_leveling, back_right, 41, 40, 8, 2);
+
+StepperGroup group_leveling = StepperGroup(motor_group_leveling, 4000, HIGH);
+
 
 void setup()
 {
-  Serial.begin(9600);
-  while (!Serial)
+  for (int i = 40; i < 54; i++)
   {
-  };
-  Serial.println("Serial Communication started..");
-  pinMode(46, OUTPUT); // Motor 1 Pul
-  pinMode(48, OUTPUT); // Motor 1 Dir
-  pinMode(50, OUTPUT); // Motor 2 Pul
-  pinMode(52, OUTPUT); // Motor 2 Dir
-  pinMode(23, INPUT);  // Switch for Big Centring
-  group_big_centring.addMotor(&motor_big_centring_left);
-  group_big_centring.addMotor(&motor_big_centring_right);
+    pinMode(i, OUTPUT);
+  }
+  for (int i = 30; i < 40; i++)
+  {
+    pinMode(i, INPUT);
+  }
+
+  group_big_centring.addMotor(&motor_big_centring_front);
+  group_big_centring.addMotor(&motor_big_centring_back);
+
+  group_small_centring.addMotor(&motor_small_centring);
+
+  group_leveling.addMotor(&motor_leveling_front_left);
+  group_leveling.addMotor(&motor_leveling_front_right);
+  group_leveling.addMotor(&motor_leveling_back_left);
+  group_leveling.addMotor(&motor_leveling_back_right);
+
+
   // 10000 Steps 876mm
   // group_big_centring.moveGroupBySteps(10000, HIGH, 5000);
   // 400mm -> 4566(.2) Steps
@@ -75,11 +96,11 @@ void loop()
   // If the program is not paused, run the motor group
   if (state == 'p')
   {
-    if (digitalRead(23) == HIGH)
+    if (digitalRead(23) == LOW)
     {
       group_big_centring.moveGroupBySteps(10, HIGH, 5000);
     }
-    if (digitalRead(22) == HIGH)
+    if (digitalRead(22) == LOW)
     {
       group_big_centring.moveGroupBySteps(10, LOW, 5000);
     }
@@ -97,10 +118,10 @@ void loop()
     group_big_centring.moveGroupBySteps(10, HIGH, 5000);
     group_big_centring.moveGroupBySteps(10, LOW, 5000);
   }
-  if (digitalRead(23) == HIGH)
-  {
-    group_big_centring.moveGroupBySteps(10, HIGH, 5000);
-  }
+  // if (digitalRead(23) == HIGH)
+  // {
+  //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
+  // }
 
   // digitalWrite(12, HIGH);
   // stepper1.moveByStepsBlocking(400, 5000);
