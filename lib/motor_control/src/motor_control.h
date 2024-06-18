@@ -109,6 +109,7 @@ private:
     unsigned long passed_time_ = 0;
     bool toggle_pulse_ = LOW;
     bool direction_ = LOW;
+    static volatile bool interrupt_flag_;
 
 public:
     StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction);
@@ -121,6 +122,14 @@ public:
     void moveGroupByRotations(unsigned int rotations, bool direction, unsigned int speed);
     void moveGroupBySteps(unsigned int steps, bool direction);
     void moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
+
+    void resetRemainingSteps () {
+        remaining_steps_ = 0;
+    }
+
+    static void isrStepperGroup(){
+        interrupt_flag_ = true;
+    };
 
     // void moveGroup(); could be used as "non-stopping" movement as a call with a high number
 };

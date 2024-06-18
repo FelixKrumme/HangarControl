@@ -1,4 +1,6 @@
 #include "motor_control.h"
+#include "switches_pin_header.h"
+#include "PinChangeInterrupt.h"
 
 const int kSupportedMicroStepConfig[15] = {2, 4, 8, 16, 32, 64, 128, 5, 10, 20, 25, 40, 50, 100, 125};
 const int kStepsPerRotationMicrostepping[15] = {400, 800, 1600, 3200, 6400, 12800, 25600, 1000, 2000, 4000, 5000, 8000, 10000, 20000, 25000};
@@ -86,6 +88,7 @@ StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _di
     group_id_ = _group_id;
     setGroupSpeed(_speed);
     setGroupDirection(_direction);
+    interrupt_flag_ = false;
 };
 
 void StepperGroup::setGroupSpeed(unsigned int _speed)
@@ -172,9 +175,24 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     setGroupSpeed(speed);
     setGroupDirection(direction);
     bool inverted_direction = direction == LOW ? HIGH : LOW;
-
-    while (remaining_steps_ > 0)
+    if (group_id_ == motor_group_leveling){
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            // Complete for all cases after testing
+        }
+    while (remaining_steps_ > 0 && !interrupt_flag_)
     {
+        
+        if (group_id_ == motor_group_big_centring){
+
+        }
+        if (group_id_ == motor_group_small_centring){
+
+        }
+        // if (group_id_ == motor_group_roof){
+
+        // }
+        
         unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
         {

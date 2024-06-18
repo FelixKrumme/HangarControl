@@ -2,6 +2,9 @@
 // #include "serial_communication.h"
 #include "motor_control.h"
 
+
+
+
 // Put here Interupt Service Routines for Endtriggers
 
 
@@ -62,6 +65,10 @@ char state = 'p'; // Program state: 'r' for running, 'p' for paused
 
 void loop()
 {
+  // State Machine
+  // States:
+  // receiving commands over serial
+  // moving by switches
   // Check if there is data available to read from the serial port
   if (Serial.available() > 0)
   {
