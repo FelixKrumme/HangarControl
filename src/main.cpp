@@ -14,7 +14,7 @@ StepperMotor motor_big_centring_back = StepperMotor(big_centring_back,motor_grou
 StepperGroup group_big_centring = StepperGroup(motor_group_big_centring, 4000, HIGH);
 
 
-StepperMotor motor_small_centring = StepperMotor(small_centring,motor_group_small_centring, platform_mid_right, 49, 48, 8, 2);
+StepperMotor motor_small_centring = StepperMotor(small_centring,motor_group_small_centring, platform_mid_right, 22, 23, 8, 2);
 
 StepperGroup group_small_centring = StepperGroup(motor_group_small_centring, 4000, HIGH);
 
@@ -29,24 +29,25 @@ StepperGroup group_leveling = StepperGroup(motor_group_leveling, 4000, HIGH);
 
 void setup()
 {
-  for (int i = 40; i < 54; i++)
+  Serial.begin(9600);
+  for (int i = 22; i < 24; i++)
   {
     pinMode(i, OUTPUT);
   }
-  for (int i = 30; i < 40; i++)
+  for (int i = 30; i < 53; i++)
   {
     pinMode(i, INPUT);
   }
 
-  group_big_centring.addMotor(&motor_big_centring_front);
-  group_big_centring.addMotor(&motor_big_centring_back);
+  // group_big_centring.addMotor(&motor_big_centring_front);
+  // group_big_centring.addMotor(&motor_big_centring_back);
 
   group_small_centring.addMotor(&motor_small_centring);
 
-  group_leveling.addMotor(&motor_leveling_front_left);
-  group_leveling.addMotor(&motor_leveling_front_right);
-  group_leveling.addMotor(&motor_leveling_back_left);
-  group_leveling.addMotor(&motor_leveling_back_right);
+  // group_leveling.addMotor(&motor_leveling_front_left);
+  // group_leveling.addMotor(&motor_leveling_front_right);
+  // group_leveling.addMotor(&motor_leveling_back_left);
+  // group_leveling.addMotor(&motor_leveling_back_right);
 
 
   // 10000 Steps 876mm
@@ -59,12 +60,21 @@ void setup()
   // group_big_centring.moveGroupBySteps(4566, HIGH, 1000);
 
   // put your setup code here, to run once:
+  Serial.println("Setup complete");
+  Serial.println("36: ");
+  Serial.println(digitalRead(36));
+  Serial.println("38: ");
+  Serial.println(digitalRead(38));
+  Serial.println("52: ");
+  Serial.println(digitalRead(52));
 }
 
 char state = 'p'; // Program state: 'r' for running, 'p' for paused
 
 void loop()
 {
+  Serial.println("36: ");
+  Serial.println(digitalRead(36));
   // State Machine
   // States:
   // receiving commands over serial
@@ -103,28 +113,30 @@ void loop()
   // If the program is not paused, run the motor group
   if (state == 'p')
   {
-    if (digitalRead(23) == LOW)
+    if (digitalRead(38) == HIGH)
     {
-      group_big_centring.moveGroupBySteps(10, HIGH, 5000);
+      Serial.println("Moving small centring forward");
+      group_small_centring.moveGroupBySteps(10, HIGH, 5000);
     }
-    if (digitalRead(22) == LOW)
+    if (digitalRead(36) == HIGH)
     {
-      group_big_centring.moveGroupBySteps(10, LOW, 5000);
+      Serial.println("Moving small centring back");
+      group_small_centring.moveGroupBySteps(10, LOW, 5000);
     }
   }
-  else if (state == 'f')
-  {
-    group_big_centring.moveGroupBySteps(10, HIGH, 3000);
-  }
-  else if (state == 'b')
-  {
-    group_big_centring.moveGroupBySteps(10, LOW, 4000);
-  }
-  else if (state == 'r')
-  {
-    group_big_centring.moveGroupBySteps(10, HIGH, 5000);
-    group_big_centring.moveGroupBySteps(10, LOW, 5000);
-  }
+  // else if (state == 'f')
+  // {
+  //   group_big_centring.moveGroupBySteps(10, HIGH, 3000);
+  // }
+  // else if (state == 'b')
+  // {
+  //   group_big_centring.moveGroupBySteps(10, LOW, 4000);
+  // }
+  // else if (state == 'r')
+  // {
+  //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
+  //   group_big_centring.moveGroupBySteps(10, LOW, 5000);
+  // }
   // if (digitalRead(23) == HIGH)
   // {
   //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
