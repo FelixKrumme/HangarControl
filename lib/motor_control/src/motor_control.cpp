@@ -213,3 +213,36 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     };
     return;
 };
+
+// Higher level function to move the different groups back and forth
+// Big Centring 10000 Steps 876mm
+//   group_big_centring.moveGroupBySteps(10000, HIGH, 5000); (To the left? (driving direction))
+//   400mm -> 4566(.2) Steps
+//   group_big_centring.moveGroupBySteps(4566, LOW, 5000); // 293mm
+//   Sweet Spot of Speed for big centring probably is somewhere between 2000 and 4000
+
+void moveBigCentringLeft(StepperGroup group_big_centring)
+{
+    // group_big_centring.moveGroupBySteps(4566, HIGH, 3000);
+    // group_big_centring.moveGroupBySteps(4566, LOW, 2000);
+    // group_big_centring.moveGroupBySteps(4566, HIGH, 1000);
+    return;
+};
+
+
+void moveBigCentringRight(StepperGroup group_big_centring)
+{
+    // group_big_centring.moveGroupBySteps(4566, LOW, 3000);
+    // group_big_centring.moveGroupBySteps(4566, HIGH, 2000);
+    // group_big_centring.moveGroupBySteps(4566, LOW, 1000);
+    return;
+};
+
+void homeBigCentring(StepperGroup group_big_centring){
+    // Move until (inductive) endstop is reached
+    // Set position to 0 (afterward use hard coded step ammount to move to the other side)
+    // (Next Step) move to the other endstops position
+    // Save steps needed to reach the endstop
+    // Move to ind endstops
+    // Save steps needed to reach the endstop
+};

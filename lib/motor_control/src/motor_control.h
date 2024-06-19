@@ -45,6 +45,8 @@ private:
     unsigned long passed_time_ = 0;
     bool direction_ = false;
     bool togglePulse_ = LOW;
+    int position_ = 0; // Position in mm
+    int end_positon_ = 0;   // Position in mm
 
 public:
     StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
