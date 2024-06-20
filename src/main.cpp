@@ -60,21 +60,14 @@ void setup()
   // group_big_centring.moveGroupBySteps(4566, HIGH, 1000);
 
   // put your setup code here, to run once:
-  Serial.println("Setup complete");
-  Serial.println("36: ");
-  Serial.println(digitalRead(36));
-  Serial.println("38: ");
-  Serial.println(digitalRead(38));
-  Serial.println("52: ");
-  Serial.println(digitalRead(52));
 }
 
 char state = 'p'; // Program state: 'r' for running, 'p' for paused
 
 void loop()
 {
-  Serial.println("36: ");
-  Serial.println(digitalRead(36));
+  // Serial.println("36: ");
+  // Serial.println(digitalRead(36));
   // State Machine
   // States:
   // receiving commands over serial
@@ -94,13 +87,13 @@ void loop()
     else if (incomingByte == 'f')
     {
       state = 'f';
-      Serial.println("Moving big centring forward");
+      Serial.println("Moving centring forward");
     }
 
     else if (incomingByte == 'b')
     {
       state = 'b';
-      Serial.println("Moving big centring back");
+      Serial.println("Moving centring back");
     }
     // If it's an 'r', resume the program
     else if (incomingByte == 'r')
@@ -113,25 +106,32 @@ void loop()
   // If the program is not paused, run the motor group
   if (state == 'p')
   {
-    if (digitalRead(38) == HIGH)
-    {
-      Serial.println("Moving small centring forward");
-      group_small_centring.moveGroupBySteps(10, HIGH, 5000);
-    }
-    if (digitalRead(36) == HIGH)
-    {
-      Serial.println("Moving small centring back");
-      group_small_centring.moveGroupBySteps(10, LOW, 5000);
-    }
+    // if (digitalRead(38) == HIGH)
+    // {
+    //   Serial.println("Moving small centring forward");
+    //   group_small_centring.moveGroupBySteps(10, HIGH, 5000);
+    // }
+    // if (digitalRead(36) == HIGH)
+    // {
+    //   Serial.println("Moving small centring back");
+    //   group_small_centring.moveGroupBySteps(10, LOW, 5000);
+    // }
+    delay(1000);
   }
-  // else if (state == 'f')
-  // {
-  //   group_big_centring.moveGroupBySteps(10, HIGH, 3000);
-  // }
-  // else if (state == 'b')
-  // {
-  //   group_big_centring.moveGroupBySteps(10, LOW, 4000);
-  // }
+  else if (state == 'f')
+  {
+    group_small_centring.moveGroupBySteps(11034, HIGH, 3000);
+    state = 'b';
+    // 43.5mm -> 5000 Steps
+    // 11034 Steps -> 960mm
+    Serial.println("Finished");
+  }
+  else if (state == 'b')
+  {
+    group_small_centring.moveGroupBySteps(11034, LOW, 3000);
+    state = 'f';
+    Serial.println("Finished");
+  }
   // else if (state == 'r')
   // {
   //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
