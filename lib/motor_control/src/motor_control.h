@@ -45,9 +45,6 @@ private:
     unsigned long passed_time_ = 0;
     bool direction_ = false;
     bool togglePulse_ = LOW;
-    int position_ = 0; // Position in mm
-    int end_positon_ = 0;   // Position in mm
-
 public:
     StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
                  byte _motor_dir_pin, byte _motor_step_pin,
@@ -111,12 +108,20 @@ private:
     unsigned long passed_time_ = 0;
     bool toggle_pulse_ = LOW;
     bool direction_ = LOW;
+    int position_ = 0; // Position in mm
+    int end_position_ = 0;   // Position in mm
+    int distance_in_steps = 0; // Distance between 0 and end_position in steps
 
 public:
-    StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction);
+    StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction,int end_position); 
 
     void setGroupSpeed(unsigned int _speed);
     void setGroupDirection(bool _direction);
+
+    void setPosition(int position); 
+    int getPosition(void) {return position_;};
+    int getEndPosition(void) {return end_position_;};
+
     void addMotor(StepperMotor *motor);
 
     void moveGroupByRotations(unsigned int rotations, bool direction);

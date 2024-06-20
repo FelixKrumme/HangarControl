@@ -81,11 +81,18 @@ void StepperMotor::moveByRotationsBlocking(unsigned int rotations, unsigned int 
 /// @brief Creates an empty instance of the StepperGroup class, which should be used for parallel movement of multiple motors.
 /// @param _group_id use the enum motor_group_id
 /// @param _speed sets the speed which should be the default for movements the groups make. Respect the limits.
-StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction)
+StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction, int end_position)
 {
     group_id_ = _group_id;
     setGroupSpeed(_speed);
     setGroupDirection(_direction);
+    end_position_ = end_position;
+};
+
+void StepperGroup::setPosition(int position)
+{
+    position_ = position;
+    return;
 };
 
 void StepperGroup::setGroupSpeed(unsigned int _speed)
@@ -246,3 +253,36 @@ void homeBigCentring(StepperGroup group_big_centring){
     // Move to ind endstops
     // Save steps needed to reach the endstop
 };
+
+// 435mm -> 5000 Steps
+// 11034 Steps -> 960mm
+
+void moveSmallCentringBack(StepperGroup group_small_centring)
+{
+    int moving_distance = group_small_centring.getEndPosition() - group_small_centring.getPosition();
+    unsigned int steps = round(moving_distance * 11.49);
+    group_small_centring.moveGroupBySteps(steps, HIGH, 3000);
+    return;
+};
+
+void moveSmallCentringForward(StepperGroup group_small_centring)
+{
+    int moving_distance = abs(group_small_centring.getPosition() - group_small_centring.getEndPosition());
+    unsigned int steps = round(moving_distance * 11.49);
+    group_small_centring.moveGroupBySteps(steps, LOW, 3000);
+    return;
+};
+
+void homeSmallCentring(StepperGroup group_small_centring){
+    // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
+    group_small_centring.moveGroupBySteps(11100, HIGH, 3000);
+    group_small_centring.setPosition(0);
+};
+
+// Idea extended homing:
+// Move until (inductive) endstop is reached
+// Set position to 0 (afterward use hard coded step ammount to move to the other side)
+// (Next Step) move to the other endstops position
+// Save steps needed to reach the endstop
+// Move to ind endstops
+// Save steps needed to reach the endstop
