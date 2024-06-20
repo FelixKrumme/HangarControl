@@ -1,4 +1,6 @@
 #include "motor_control.h"
+// #include "switches_pin_header.h"
+#include "PinChangeInterrupt.h"
 
 const int kSupportedMicroStepConfig[15] = {2, 4, 8, 16, 32, 64, 128, 5, 10, 20, 25, 40, 50, 100, 125};
 const int kStepsPerRotationMicrostepping[15] = {400, 800, 1600, 3200, 6400, 12800, 25600, 1000, 2000, 4000, 5000, 8000, 10000, 20000, 25000};
@@ -81,6 +83,8 @@ void StepperMotor::moveByRotationsBlocking(unsigned int rotations, unsigned int 
 /// @brief Creates an empty instance of the StepperGroup class, which should be used for parallel movement of multiple motors.
 /// @param _group_id use the enum motor_group_id
 /// @param _speed sets the speed which should be the default for movements the groups make. Respect the limits.
+volatile bool StepperGroup::interrupt_flag_ = false;
+
 StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction, int end_position)
 {
     group_id_ = _group_id;
@@ -177,10 +181,31 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     // oder logik mit interrupt (interrupt wenn keine schritte mehr oder endstop erreicht)
     remaining_steps_ = steps;
     setGroupSpeed(speed);
+    bool last_direction = direction_;
     setGroupDirection(direction);
     bool inverted_direction = direction == LOW ? HIGH : LOW;
-
-    while (remaining_steps_ > 0)
+    // if (group_id_ == motor_group_leveling){
+    //     // Check if the pins connected to the endstops are low if not the interrupt flag should be set to false again
+    //         attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+    //         attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+    //         // Complete for all cases after testing
+    //     }
+    if (group_id_ == motor_group_small_centring){
+        // Check if the pins connected to the endstops are low if not the interrupt flag should be set to false again
+        if(digitalRead(52) == HIGH){
+            interrupt_flag_ = false;
+            // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(52), StepperGroup::isrStepperGroup, FALLING);
+            // Complete for all cases after testing
+        } else if (last_direction != direction)
+        {
+            // Movement in opposite direction so movement should be safe
+            interrupt_flag_ = false;
+        }
+        
+    }
+    while (remaining_steps_ > 0 && !interrupt_flag_)
     {
         unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
@@ -218,6 +243,7 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
             passed_time_ = current_time;
         };
     };
+    // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(40));
     return;
 };
 
