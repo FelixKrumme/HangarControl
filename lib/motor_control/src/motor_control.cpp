@@ -221,27 +221,24 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     return;
 };
 
-// Higher level function to move the different groups back and forth
-// Big Centring 10000 Steps 876mm
-//   group_big_centring.moveGroupBySteps(10000, HIGH, 5000); (To the left? (driving direction))
-//   400mm -> 4566(.2) Steps
-//   group_big_centring.moveGroupBySteps(4566, LOW, 5000); // 293mm
-//   Sweet Spot of Speed for big centring probably is somewhere between 2000 and 4000
+
+// Function to move the big centring back and forth
 
 void moveBigCentringLeft(StepperGroup group_big_centring)
 {
-    // group_big_centring.moveGroupBySteps(4566, HIGH, 3000);
-    // group_big_centring.moveGroupBySteps(4566, LOW, 2000);
-    // group_big_centring.moveGroupBySteps(4566, HIGH, 1000);
+ 
+    int moving_distance = group_big_centring.getEndPosition() - group_big_centring.getPosition();
+    unsigned int steps = round(moving_distance * 11.76);
+    group_big_centring.moveGroupBySteps(steps, HIGH, 3000);
     return;
 };
 
 
 void moveBigCentringRight(StepperGroup group_big_centring)
 {
-    // group_big_centring.moveGroupBySteps(4566, LOW, 3000);
-    // group_big_centring.moveGroupBySteps(4566, HIGH, 2000);
-    // group_big_centring.moveGroupBySteps(4566, LOW, 1000);
+  int moving_distance = abs(group_big_centring.getPosition() - group_big_centring.getEndPosition());
+    unsigned int steps = round(moving_distance * 11.76);
+    group_big_centring.moveGroupBySteps(steps, LOW, 3000);
     return;
 };
 
@@ -252,8 +249,13 @@ void homeBigCentring(StepperGroup group_big_centring){
     // Save steps needed to reach the endstop
     // Move to ind endstops
     // Save steps needed to reach the endstop
+    group_big_centring.moveGroupBySteps(NULL, LOW, 3000);
+    group_big_centring.setPosition(0);
+    return;
 };
 
+// Function to move the small centring back and forth
+// measured distances (results in 11.49 steps per mm)
 // 435mm -> 5000 Steps
 // 11034 Steps -> 960mm
 
@@ -277,6 +279,32 @@ void homeSmallCentring(StepperGroup group_small_centring){
     // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
     group_small_centring.moveGroupBySteps(11100, HIGH, 3000);
     group_small_centring.setPosition(0);
+    return;
+};
+
+// Function to move the platform up and down
+
+void movePlatformUp(StepperGroup group_leveling)
+{
+    int moving_distance = group_leveling.getEndPosition() - group_leveling.getPosition();
+    unsigned int steps = round(moving_distance * NULL);
+    group_leveling.moveGroupBySteps(steps, HIGH, 3000);
+    return;
+};
+
+void movePlatformDown(StepperGroup group_leveling)
+{
+    int moving_distance = abs(group_leveling.getPosition() - group_leveling.getEndPosition());
+    unsigned int steps = round(moving_distance * NULL);
+    group_leveling.moveGroupBySteps(steps, LOW, 3000);
+    return;
+};
+
+void homePlatform(StepperGroup group_leveling){
+    // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
+    group_leveling.moveGroupBySteps(NULL, HIGH, 3000);
+    group_leveling.setPosition(0);
+    return;
 };
 
 // Idea extended homing:
