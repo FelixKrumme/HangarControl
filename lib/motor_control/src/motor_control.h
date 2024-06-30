@@ -129,6 +129,7 @@ public:
     void moveGroupByRotations(unsigned int rotations, bool direction, unsigned int speed);
     void moveGroupBySteps(unsigned int steps, bool direction);
     void moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
+    void switchMoveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
 
     void resetRemainingSteps () {
         remaining_steps_ = 0;
@@ -137,9 +138,20 @@ public:
     static void isrStepperGroup(){
         interrupt_flag_ = true;
     };
-
-    // void moveGroup(); could be used as "non-stopping" movement as a call with a high number
+    
 };
+
+void moveBigCentringLeft(StepperGroup group_big_centring);
+void moveBigCentringRight(StepperGroup group_big_centring);
+void homeBigCentring(StepperGroup group_big_centring);
+
+void moveSmallCentringBack(StepperGroup group_small_centring);
+void moveSmallCentringForward(StepperGroup group_small_centring);
+void homeSmallCentring(StepperGroup group_small_centring);
+
+void movePlatformUp(StepperGroup group_leveling);
+void movePlatformDown(StepperGroup group_leveling);
+void homePlatform(StepperGroup group_leveling);
 
 // Use this Enumerators for assinging a Group to a Motor
 enum motor_group_id
