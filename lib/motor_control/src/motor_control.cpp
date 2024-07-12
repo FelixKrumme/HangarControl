@@ -1,6 +1,5 @@
 #include "motor_control.h"
 #include "PinChangeInterrupt.h"
-#include "switch_handling.h"
 #include "pin_header.h"
 
 const int kSupportedMicroStepConfig[15] = {2, 4, 8, 16, 32, 64, 128, 5, 10, 20, 25, 40, 50, 100, 125};
@@ -191,9 +190,9 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
     // PNP Openers -> High Voltage if no metal is detected
     // High Voltage -> No Metal -> Interrupt Flag can be set to false
     // Metal detected -> Low Voltage => Look for Falling Edge
-    // Low Voltage -> Metal detected -> Check if the Movement is in the opposite direction -> If so set the interrupt flag to false -> No need to register the endstop we're moving away from
+    // Low Voltage -> Metal detected -> Check if the Movement is in the opposite direction -> If so set the interrupt flag to false -> No need to register the endstop we're moving away from (do it anyways? why not? looking for falling edge and its rising when were moving away)
     // Mech endstops are used with the NC configuration
-    // High Voltage -> Not activated
+    // High Voltage -> Not activated -> look for falling edge
     if (group_id_ == motor_group_small_centring)
     {
         // One Inductive Endstop/ One Mech to be added
@@ -283,30 +282,48 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
             toggle_pulse_ = toggle_pulse_ == LOW ? HIGH : LOW;
             for (auto i = 0; i < motor_count_; i++)
             {
-                // Temporary solution for the (inverted directions of motors on opposite sides.
-                // Serial.println("i: ");
-                // Serial.println(i);
-                // Serial.println("Direction: ");
-                // Serial.println(direction);
+                // Invert the directions if Motors should turn in other direction. This is determined by the Motor UID
                 if (motors[i]->getMotorUniqueID() % 2 != 0)
                 {
                     digitalWrite(motors[i]->getMotorDirectionPin(), inverted_direction);
-                    // Serial.println("Direction inverted: ");
-                    // Serial.println(direction);
                 }
                 else
                 {
                     digitalWrite(motors[i]->getMotorDirectionPin(), direction);
                 }
-
-                // digitalWrite(motors[i]->getMotorDirectionPin(), direction);
                 digitalWrite(motors[i]->getMotorStepPin(), toggle_pulse_);
             }
 
             passed_time_ = current_time;
         };
     };
-    // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(40));
+
+    if (group_id_ == motor_group_small_centring)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_mec));
+    }
+
+    if (group_id_ == motor_group_big_centring)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_mec));
+    }
+
+    if (group_id_ == motor_group_leveling)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_mec));
+    }
+    
     return;
 };
 
@@ -316,15 +333,13 @@ void StepperGroup::switchMoveGroupBySteps(unsigned int steps, bool direction, un
     setGroupSpeed(speed);
     setGroupDirection(direction);
 
-    
-     // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
+    // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
     // oder logik mit interrupt (interrupt wenn keine schritte mehr oder endstop erreicht)
     remaining_steps_ = steps;
     setGroupSpeed(speed);
-    bool last_direction = direction_;
     setGroupDirection(direction);
     bool inverted_direction = direction == LOW ? HIGH : LOW;
-    // No endstop logic need when actions are manually 
+    // No endstop logic need when actions are manually
 
     while (remaining_steps_ > 0)
     {
@@ -341,26 +356,17 @@ void StepperGroup::switchMoveGroupBySteps(unsigned int steps, bool direction, un
             toggle_pulse_ = toggle_pulse_ == LOW ? HIGH : LOW;
             for (auto i = 0; i < motor_count_; i++)
             {
-                // Temporary solution for the (inverted directions of motors on opposite sides.
-                // Serial.println("i: ");
-                // Serial.println(i);
-                // Serial.println("Direction: ");
-                // Serial.println(direction);
+                // Invert the directions if Motors should turn in other direction. This is determined by the Motor UID
                 if (motors[i]->getMotorUniqueID() % 2 != 0)
                 {
                     digitalWrite(motors[i]->getMotorDirectionPin(), inverted_direction);
-                    // Serial.println("Direction inverted: ");
-                    // Serial.println(direction);
                 }
                 else
                 {
                     digitalWrite(motors[i]->getMotorDirectionPin(), direction);
                 }
-
-                // digitalWrite(motors[i]->getMotorDirectionPin(), direction);
                 digitalWrite(motors[i]->getMotorStepPin(), toggle_pulse_);
             }
-
             passed_time_ = current_time;
         };
     };
@@ -437,7 +443,7 @@ void movePlatformUp(StepperGroup group_leveling)
 {
     int moving_distance = group_leveling.getEndPosition() - group_leveling.getPosition();
     unsigned int steps = round(moving_distance * NULL);
-    group_leveling.moveGroupBySteps(steps, HIGH, 3000);
+    group_leveling.moveGroupBySteps(steps, LOW, 400);
     group_leveling.setPosition(group_leveling.getEndPosition());
     return;
 };
@@ -446,7 +452,7 @@ void movePlatformDown(StepperGroup group_leveling)
 {
     // int moving_distance = abs(group_leveling.getPosition() - group_leveling.getEndPosition());
     // unsigned int steps = round(moving_distance * NULL);
-    group_leveling.moveGroupBySteps(NULL, LOW, 3000);
+    group_leveling.moveGroupBySteps(NULL, HIGH, 650);
     group_leveling.setPosition(0);
     return;
 };
@@ -454,7 +460,7 @@ void movePlatformDown(StepperGroup group_leveling)
 void homePlatform(StepperGroup group_leveling)
 {
     // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
-    group_leveling.moveGroupBySteps(NULL, LOW, 3000);
+    group_leveling.moveGroupBySteps(NULL, HIGH, 650);
     group_leveling.setPosition(0);
     return;
 };
@@ -465,4 +471,4 @@ void homePlatform(StepperGroup group_leveling)
 // (Next Step) move to the other endstops position
 // Save steps needed to reach the endstop
 // Move to ind endstops
-// Save steps needed to reach the endstop
+// Save steps needed to reach each of the endstops as the steps neeed will prolly differ from each other

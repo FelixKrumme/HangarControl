@@ -2,22 +2,22 @@
 #define SWITCHES_PIN_HEADER_H
 
 // Motor Pins
-#define big_centring_front_dir_pin 1
-#define big_centring_front_pul_pin 1
-#define big_centring_back_dir_pin 1
-#define big_centring_back_pul_pin 1
+#define big_centring_front_dir_pin 30
+#define big_centring_front_pul_pin 31
+#define big_centring_back_dir_pin 32
+#define big_centring_back_pul_pin 33
 
-#define small_centring_dir_pin 1
-#define small_centring_pul_pin 1
+#define small_centring_dir_pin 34
+#define small_centring_pul_pin 35
 
-#define leveling_front_left_dir_pin 1
-#define leveling_front_left_pul_pin 1
-#define leveling_front_right_dir_pin 1
-#define leveling_front_right_pul_pin 1
-#define leveling_back_left_dir_pin 1
-#define leveling_back_left_pul_pin 1
-#define leveling_back_right_dir_pin 1
-#define leveling_back_right_pul_pin 1
+#define leveling_front_left_dir_pin 22
+#define leveling_front_left_pul_pin 23
+#define leveling_front_right_dir_pin 24
+#define leveling_front_right_pul_pin 25
+#define leveling_back_left_dir_pin 26
+#define leveling_back_left_pul_pin 27
+#define leveling_back_right_dir_pin 28
+#define leveling_back_right_pul_pin 29
 
 #define roof_dir_pin NULL
 #define roof_pul_pin NULL
@@ -53,13 +53,13 @@
 #define roof_endst_mec NULL
 
 // Switch Pins
-#define switch_big_centring_left 1
-#define switch_big_centring_right 1
-#define switch_small_centring_left 1
-#define switch_small_centring_right 1
-#define switch_leveling_left 1
-#define switch_leveling_right 1
-#define roof_switch_left NULL
-#define roof_switch_right NULL
+#define switch_big_centring_left 14
+#define switch_big_centring_right 15
+#define switch_small_centring_left 16
+#define switch_small_centring_right 17
+#define switch_leveling_left 18
+#define switch_leveling_right 19
+#define roof_switch_left NULL // 20
+#define roof_switch_right NULL // 21
 
 #endif

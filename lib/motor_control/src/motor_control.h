@@ -25,7 +25,7 @@
 extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
-const unsigned int kMaxSpeed = 500;
+const unsigned int kMaxSpeed = 100;
 
 class StepperMotor
 {
@@ -182,14 +182,15 @@ enum motor_position
 
 };
 
+// Even Number means there wont be a inverveted direction
 enum motor_uid{
     small_centring = 0,
     big_centring_front = 1,
     big_centring_back = 2,
-    leveling_front_left = 3,
-    leveling_front_right = 4,
-    leveling_back_left = 5,
-    leveling_back_right = 6
+    leveling_front_left = 4,
+    leveling_front_right = 6,
+    leveling_back_left = 8,
+    leveling_back_right = 10
 };
 
 enum motor_direction
