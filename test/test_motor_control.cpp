@@ -1,5 +1,6 @@
 #include <unity.h>
 #include "motor_control.h"
+#include "Arduino.h"
 
 void test_setMicroStepConfig_valid(void) {
     StepperMotor motor(motor_group_plattform, front_left, 12, 13, 14, 2);
@@ -23,10 +24,20 @@ void test_setMicroStepConfig_invalid(void) {
     TEST_ASSERT_NOT_EQUAL(invalid_config, motor.getMicroStepConfig());
 }
 
+void test_moveByStepsBlocking() {
+    // Doesnt do any assertions as it should move a connected motor
+    StepperMotor motor(motor_group_plattform, front_left, PB6, PH6, PH5, 2);
+    unsigned int steps = 400;
+
+    motor.moveByStepsBlocking(steps);
+    TEST_ASSERT_EQUAL(motor.getStepsPerRotation(), 400);
+}
+
 void setup() {
     UNITY_BEGIN();
     RUN_TEST(test_setMicroStepConfig_valid);
     RUN_TEST(test_setMicroStepConfig_invalid);
+    RUN_TEST(test_moveByStepsBlocking);
     UNITY_END();
 }
 
