@@ -25,7 +25,7 @@
 extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
-const unsigned int kMaxSpeed = 1000;
+const unsigned int kMaxSpeed = 400;
 
 class StepperMotor
 {
@@ -45,9 +45,8 @@ private:
     unsigned long passed_time_;
     bool direction_ = false;
     bool togglePulse_ = LOW;
-
 public:
-    StepperMotor(byte _motor_group, byte _motor_position,
+    StepperMotor(byte _motor_uid, byte _motor_group, byte _motor_position,
                  byte _motor_dir_pin, byte _motor_step_pin,
                  byte _motor_enable_pin,
                  unsigned int _micro_step_config);
@@ -109,25 +108,55 @@ private:
     unsigned long passed_time_ = 0;
     bool toggle_pulse_ = LOW;
     bool direction_ = LOW;
+    int position_ = 0; // Position in mm
+    int end_position_ = 0;   // Position in mm
+    int distance_in_steps = 0; // Distance between 0 and end_position in steps
+    static volatile bool interrupt_flag_;
 
 public:
-    StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction);
+    StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction,int end_position); 
 
     void setGroupSpeed(unsigned int _speed);
+    void setGroupDirection(bool _direction);
+
+    void setPosition(int position); 
+    int getPosition(void) {return position_;};
+    int getEndPosition(void) {return end_position_;};
+
     void addMotor(StepperMotor *motor);
 
     void moveGroupByRotations(unsigned int rotations, bool direction);
     void moveGroupByRotations(unsigned int rotations, bool direction, unsigned int speed);
     void moveGroupBySteps(unsigned int steps, bool direction);
     void moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
+    void switchMoveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
 
-    // void moveGroup(); could be used as "non-stopping" movement as a call with a high number
+    void resetRemainingSteps () {
+        remaining_steps_ = 0;
+    }
+
+    static void isrStepperGroup(){
+        interrupt_flag_ = true;
+    };
+    
 };
+
+void moveBigCentringLeft(StepperGroup group_big_centring);
+void moveBigCentringRight(StepperGroup group_big_centring);
+void homeBigCentring(StepperGroup group_big_centring);
+
+void moveSmallCentringBack(StepperGroup group_small_centring);
+void moveSmallCentringForward(StepperGroup group_small_centring);
+void homeSmallCentring(StepperGroup group_small_centring);
+
+void movePlatformUp(StepperGroup group_leveling);
+void movePlatformDown(StepperGroup group_leveling);
+void homePlatform(StepperGroup group_leveling);
 
 // Use this Enumerators for assinging a Group to a Motor
 enum motor_group_id
 {
-    motor_group_plattform,
+    motor_group_leveling,
     motor_group_big_centring,
     motor_group_small_centring,
     motor_group_roof
@@ -151,6 +180,17 @@ enum motor_position
     front_up_left,
     front_up_right
 
+};
+
+// Even Number means there wont be a inverveted direction
+enum motor_uid{
+    small_centring = 0,
+    big_centring_front = 1,
+    big_centring_back = 2,
+    leveling_front_left = 4,
+    leveling_front_right = 6,
+    leveling_back_left = 8,
+    leveling_back_right = 10
 };
 
 enum motor_direction
