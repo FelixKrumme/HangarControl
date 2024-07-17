@@ -30,20 +30,21 @@
 // 2, 3, 18, 19, 20, 21
 
 // Endstop Pins
-#define big_centring_front_endst_ind 10
-#define big_centring_back_endst_ind 11
-#define big_centring_endst_mec 12 // Two Mechanical Endstops used in series
+// 50-53 used, 62, 63 used 
+#define big_centring_front_endst_ind 62
+#define big_centring_back_endst_ind 63
+// #define big_centring_endst_mec 12 // Two Mechanical Endstops used in series
 // #define big_centring_front_endst_mec
 // #define big_centring_back_endst_mec
 
-#define small_centring_endst_ind 13
-#define small_centring_endst_mec 50
+#define small_centring_endst_ind 52
+// #define small_centring_endst_mec 50
 
-#define leveling_front_left_endst_ind 51
-#define leveling_front_right_endst_ind 52
-#define leveling_back_left_endst_ind 53
-#define leveling_back_right_endst_ind 62 // A8
-#define leveling_endst_mec 63 // A9 // Four Mechanical Endstops used in series
+#define leveling_front_left_endst_ind 53
+#define leveling_front_right_endst_ind 51
+#define leveling_back_left_endst_ind 50
+#define leveling_back_right_endst_ind 12
+// #define leveling_endst_mec  53//  // Four Mechanical Endstops used in series
 // #define leveling_front_left_endst_mec 
 // #define leveling_front_right_endst_mec 
 // #define leveling_back_left_endst_mec 
@@ -53,12 +54,13 @@
 #define roof_endst_mec NULL
 
 // Switch Pins
-#define switch_big_centring_left 14
-#define switch_big_centring_right 15
-#define switch_small_centring_left 16
-#define switch_small_centring_right 17
-#define switch_leveling_left 18
-#define switch_leveling_right 19
+#define switch_leveling_left 15
+#define switch_leveling_right 14
+#define switch_big_centring_left 19
+#define switch_big_centring_right 18
+#define switch_small_centring_left 17
+#define switch_small_centring_right 16
+
 #define roof_switch_left NULL // 20
 #define roof_switch_right NULL // 21
 

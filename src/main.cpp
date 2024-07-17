@@ -33,9 +33,17 @@ void setup()
 {
   Serial.begin(9600);
   // Configure the pins accordingly to the pin_header.h
-  for (int i = 22; i < 54; i++)
+  for (int i = 22; i < 36; i++)
   {
     pinMode(i, OUTPUT);
+  }
+  for (int i = 50; i < 64; i++)
+  {
+    pinMode(i, INPUT);
+  }
+  for (int i = 14; i < 22; i++)
+  {
+    pinMode(i, INPUT);
   }
   // for (int i = 30; i < 53; i++)
   // {
@@ -89,6 +97,14 @@ void loop()
       Serial.println("Moving big centring to the right");
     }
   }
+
+  // if (digitalRead(switch_big_centring_left) == HIGH)
+  // {
+  //   Serial.println("Switch Big Centring Left");
+  // }
+  
+  
+  
     // If it's an 'r', resume the program
     // else if (incomingByte == 'r')
     // {
@@ -103,37 +119,62 @@ void loop()
     // }
 
     // Button Movements
-    while (digitalRead(switch_big_centring_left) == HIGH)
-    {
-      group_big_centring.switchMoveGroupBySteps(10, HIGH, 5000);
-    }
+    // while (digitalRead(switch_big_centring_left) == HIGH)
+    // {
+    //   group_big_centring.switchMoveGroupBySteps(10, HIGH, 5000);
+    // }
 
-    while (digitalRead(switch_big_centring_right) == HIGH)
-    {
-      group_big_centring.switchMoveGroupBySteps(10, LOW, 5000);
-    }
+    // while (digitalRead(switch_big_centring_right) == HIGH)
+    // {
+    //   group_big_centring.switchMoveGroupBySteps(10, LOW, 5000);
+    // }
 
-    while (digitalRead(switch_small_centring_left) == HIGH)
-    {
-      group_small_centring.switchMoveGroupBySteps(10, HIGH, 5000);
-    }
+    // while (digitalRead(switch_small_centring_left) == HIGH)
+    // {
+    //   group_small_centring.switchMoveGroupBySteps(10, HIGH, 5000);
+    // }
 
-    while (digitalRead(switch_small_centring_right) == HIGH)
-    {
-      group_small_centring.switchMoveGroupBySteps(10, LOW, 5000);
-    }
+    // while (digitalRead(switch_small_centring_right) == HIGH)
+    // {
+    //   group_small_centring.switchMoveGroupBySteps(10, LOW, 5000);
+    // }
 
-    // while (digitalRead(switch_leveling_left) == HIGH)
-    if (state == 'f')
+    // if (state == 'f')
+    while (digitalRead(switch_leveling_left) == HIGH)
     {
       group_leveling.switchMoveGroupBySteps(10, HIGH, 650);
     }
 
-    // while (digitalRead(switch_leveling_right) == HIGH)
-    if (state == 'b')
+    // if (state == 'b')
+
+    while (digitalRead(switch_leveling_right) == HIGH)
     {
       // (Low === Hoch bei Plattform)
       group_leveling.switchMoveGroupBySteps(10, LOW, 400);
+    }
+
+    while (digitalRead(switch_big_centring_left) == HIGH)
+    {
+      // (Low === Hoch bei Plattform)
+      group_big_centring.switchMoveGroupBySteps(10, LOW, 2000);
+    }
+
+    while (digitalRead(switch_big_centring_right) == HIGH)
+    {
+      // (Low === Hoch bei Plattform)
+      group_big_centring.switchMoveGroupBySteps(10, HIGH, 1500);
+    }
+
+    while (digitalRead(switch_small_centring_left) == HIGH)
+    {
+      // (Low === Hoch bei Plattform)
+      group_small_centring.switchMoveGroupBySteps(10, LOW, 2000);
+    }
+
+    while (digitalRead(switch_small_centring_right) == HIGH)
+    {
+      // (Low === Hoch bei Plattform)
+      group_small_centring.switchMoveGroupBySteps(10, HIGH, 2000);
     }
 
     // else if (state == 'r')
