@@ -29,6 +29,14 @@ StepperGroup group_leveling = StepperGroup(motor_group_leveling, 4000, HIGH, 0);
 // unsigned int switchMoveRoofClose();
 void processIncomingCommand(const String &incoming);
 
+void setupSmallCentring();
+void setupBigCentring();
+void setupLeveling();
+
+unsigned int small_centring_steps = 0;
+unsigned int big_centring_steps = 0;
+unsigned int leveling_steps = 0;
+
 void setup()
 {
   Serial.begin(9600);
@@ -41,7 +49,7 @@ void setup()
   {
     pinMode(i, INPUT);
   }
-  for (int i = 14; i < 22; i++)
+  for (int i = 12; i < 22; i++)
   {
     pinMode(i, INPUT);
   }
@@ -68,255 +76,193 @@ void setup()
   // Sweet Spot of Speed for big centring probably is somewhere between 2000 and 4000
 
   Serial.println("Starting program");
+  // if (digitalRead(big_centring_back_endst_ind) == HIGH)
+  // {
+  //   Serial.println("Endstop Big Centring Back triggered");
+  // }
+  // if (digitalRead(big_centring_front_endst_ind) == HIGH)
+  // {
+  //   Serial.println("Endstop Big Centring Front triggered");
+  // }
 }
 
 char state = 'p';
+unsigned int steps_needed = 0;
 
 void loop()
 {
   if (Serial.available() > 0)
   {
-    // Read the incoming byte
-    char incomingByte = Serial.read();
-
-    // If it's a 'p', pause the program
-    if (incomingByte == 'p')
-    {
-      state = 'p';
-      Serial.println("Pausing program");
-    }
-    else if (incomingByte == 'f')
-    {
-      state = 'f';
-      Serial.println("Moving big centring to the left");
-    }
-
-    else if (incomingByte == 'b')
-    {
-      state = 'b';
-      Serial.println("Moving big centring to the right");
-    }
+    String incoming = Serial.readStringUntil('\n');
+    Serial.println(incoming);
+    processIncomingCommand(incoming);
   }
 
-  // if (digitalRead(switch_big_centring_left) == HIGH)
-  // {
-  //   Serial.println("Switch Big Centring Left");
-  // }
-  
-  
-  
-    // If it's an 'r', resume the program
-    // else if (incomingByte == 'r')
-    // {
-    //   state = 'r';
-    //   Serial.println("Moving back and forth");
-    // }
-    // }
-    // if (Serial.available() > 0)
-    // {
-    //   String incoming = Serial.readStringUntil('\n');
-    //   processIncomingCommand(incoming);
-    // }
+  while (digitalRead(switch_leveling_left) == HIGH)
+  {
+    group_leveling.switchMoveGroupBySteps(10, HIGH, PLATFORM_DOWN_SPEED);
+  }
 
-    // Button Movements
-    // while (digitalRead(switch_big_centring_left) == HIGH)
-    // {
-    //   group_big_centring.switchMoveGroupBySteps(10, HIGH, 5000);
-    // }
+  while (digitalRead(switch_leveling_right) == HIGH)
+  {
+    group_leveling.switchMoveGroupBySteps(10, LOW, PLATFORM_UP_SPEED);
+  }
 
-    // while (digitalRead(switch_big_centring_right) == HIGH)
-    // {
-    //   group_big_centring.switchMoveGroupBySteps(10, LOW, 5000);
-    // }
+  while (digitalRead(switch_big_centring_left) == HIGH)
+  {
+    group_big_centring.switchMoveGroupBySteps(10, LOW, BIG_CENTRING_LEFT_SPEED);
+  }
 
-    // while (digitalRead(switch_small_centring_left) == HIGH)
-    // {
-    //   group_small_centring.switchMoveGroupBySteps(10, HIGH, 5000);
-    // }
+  while (digitalRead(switch_big_centring_right) == HIGH)
+  {
+    group_big_centring.switchMoveGroupBySteps(10, HIGH, BIG_CENTRING_RIGHT_SPEED);
+  }
 
-    // while (digitalRead(switch_small_centring_right) == HIGH)
-    // {
-    //   group_small_centring.switchMoveGroupBySteps(10, LOW, 5000);
-    // }
+  while (digitalRead(switch_small_centring_left) == HIGH)
+  {
+    group_small_centring.switchMoveGroupBySteps(10, LOW, SMALL_CENTRING_BACKWARD_SPEED);
+  }
 
-    // if (state == 'f')
-    while (digitalRead(switch_leveling_left) == HIGH)
-    {
-      group_leveling.switchMoveGroupBySteps(10, HIGH, 650);
-    }
-
-    // if (state == 'b')
-
-    while (digitalRead(switch_leveling_right) == HIGH)
-    {
-      // (Low === Hoch bei Plattform)
-      group_leveling.switchMoveGroupBySteps(10, LOW, 400);
-    }
-
-    while (digitalRead(switch_big_centring_left) == HIGH)
-    {
-      // (Low === Hoch bei Plattform)
-      group_big_centring.switchMoveGroupBySteps(10, LOW, 2000);
-    }
-
-    while (digitalRead(switch_big_centring_right) == HIGH)
-    {
-      // (Low === Hoch bei Plattform)
-      group_big_centring.switchMoveGroupBySteps(10, HIGH, 1500);
-    }
-
-    while (digitalRead(switch_small_centring_left) == HIGH)
-    {
-      // (Low === Hoch bei Plattform)
-      group_small_centring.switchMoveGroupBySteps(10, LOW, 2000);
-    }
-
-    while (digitalRead(switch_small_centring_right) == HIGH)
-    {
-      // (Low === Hoch bei Plattform)
-      group_small_centring.switchMoveGroupBySteps(10, HIGH, 2000);
-    }
-
-    // else if (state == 'r')
-    // {
-    //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
-    //   group_big_centring.moveGroupBySteps(10, LOW, 5000);
-    // }
-    // if (digitalRead(23) == HIGH)
-    // {
-    //   group_big_centring.moveGroupBySteps(10, HIGH, 5000);
-    // }
-
-    // digitalWrite(12, HIGH);
-    // stepper1.moveByStepsBlocking(400, 5000);
-    // digitalWrite(12, LOW);
-    // stepper1.moveByStepsBlocking(800, 4000);
-    // delay(1000);
-
-    // group1.moveGroupByRotations(10, HIGH);
-
-    // group1.moveGroupByRotations(10, LOW);
-
-    // digitalWrite(17, HIGH);
-    // digitalWrite(25, HIGH);
-
-    // for (unsigned int i = 0; i < 800; i++)
-    // {
-    //   digitalWrite(18, HIGH);
-    //   delayMicroseconds(800);
-    //   digitalWrite(18, LOW);
-    //   delayMicroseconds(800);
-    // }
-    // digitalWrite(25, LOW);
-
-    // for (int i = 0; i < 800; i++)
-    // {
-    //   digitalWrite(18, HIGH);
-    //   delayMicroseconds(500);
-    //   digitalWrite(18, LOW);
-    //   delayMicroseconds(500);
-    // }
-    // digitalWrite(17, LOW);
-
-    // put your main code here, to run repeatedly:
-    // Idea for an extended Messaging Protocol (to be implemented in the future)
-    // String* message = checkForMessage();
-    // if (message != nullptr) {
-    //     // Use the message...
-    //     delete message;  // Don't forget to delete it!
-    // }
-
-  // Interrupt Var and ISR for the position tracking with switches
-  // bool loop_flag = true;
-  // void isrResetLoopFlag();
-
-  // With this implementation there isnt a need for the switchMoveBigCentringLeft() function as the End could be triggered with the switch interrupt also
-  // This makes it more of a design choice if switch moves should obey to endstops or not
-  // Currently the switch moves are not obeying to the endstops making it easier to take fully manual control of the movements.
-  // In the future when the behavior of the movements is enoughly tested and the endstops are implemented correctly the switch moves could be changed to obey to the endstops making it safer to avoid unwanted movements going over the limits.
-
-  // Experimental for keeping the position system when moving with the switches
-  // Create similar functions for the other switches if its working
-  // Keep in mind that there are only 6 Interrupt Pins which can be used
-  // Configure accordingly in the pin_header.h
-  // void switchMoveBigCentringLeft(){
-  //   loop_flag = true;
-  //   unsigned int steps_made = 0;
-  //   // register endstop interrupts
-  //   attachInterrupt(digitalPinToInterrupt(switch_big_centring_left), isrResetLoopFlag, FALLING);
-  //   while(loop_flag){
-  //     group_big_centring.moveGroupBySteps(10, HIGH, 5000);
-  //     steps_made += 10;
-  //   }
-  //   // update position
-  //   group_big_centring.setPosition(group_big_centring.getPosition() + (steps_made * 0.293)); // 293mm per 10 steps check that number because its probably not exact
-  //   // deregister interrupt
-  //   detachInterrupt(digitalPinToInterrupt(switch_big_centring_left));
-  //   return;
-  // }
-
-  // void isrResetLoopFlag(){
-  //   loop_flag = false;
-  // }
+  while (digitalRead(switch_small_centring_right) == HIGH)
+  {
+    group_small_centring.switchMoveGroupBySteps(10, HIGH, SMALL_CENTRING_FORWARD_SPEED);
+  }
 }
-//   void processIncomingCommand(const String &incoming)
-//   {
-//     if (incoming.length() < 3)
-//       return; // Ensure the string is long enough
 
-//     if (incoming.startsWith("M"))
-//     {
-//       char motorGroup = incoming[1];
-//       bool direction = incoming[2] == '1';
+void processIncomingCommand(const String &incoming)
+{
+  if (incoming.length() < 3)
+    return; // Ensure the string is long enough
 
-//       switch (motorGroup)
-//       {
-//       case 'L': // Leveling
-//         if (direction)
-//         {
-//           movePlatformUp(group_leveling);
-//         }
-//         else
-//         {
-//           movePlatformDown(group_leveling);
-//         }
-//         break;
-//       case 'B': // Big Centring
-//         if (direction)
-//         {
-//           moveBigCentringLeft(group_big_centring);
-//         }
-//         else
-//         {
-//           moveBigCentringRight(group_big_centring);
-//           ;
-//         }
-//         break;
-//       case 'S': // Small Centring
-//         if (direction)
-//         {
-//           moveSmallCentringForward(group_small_centring);
-//         }
-//         else
-//         {
-//           moveSmallCentringBack(group_small_centring);
-//         }
-//         break;
-//       // case 'R': // Roof
-//       //   // Assuming switchMoveRoofOpen() and switchMoveRoofClose() are uncommented and implemented
-//       //   if (direction)
-//       //   {
-//       //     // switchMoveRoofOpen();
-//       //   }
-//       //   else
-//       //   {
-//       //     // switchMoveRoofClose();
-//       //   }
-//       //   break;
-//       default:
-//         Serial.println("Invalid motor group");
-//         break;
-//       }
-//     }
-//   }
-// }
+  if (incoming.startsWith("M"))
+  {
+    char motorGroup = incoming[1];
+    bool direction = incoming[2] == '1';
+
+    switch (motorGroup)
+    {
+    case 'L': // Leveling
+      if (direction)
+      {
+        group_leveling.moveGroupBySteps(leveling_steps, LOW, PLATFORM_UP_SPEED);
+        // movePlatformUp(group_leveling);
+      }
+      else
+      {
+        group_leveling.moveGroupBySteps(leveling_steps, HIGH, PLATFORM_DOWN_SPEED);
+        // movePlatformDown(group_leveling);
+      }
+      break;
+    case 'B': // Big Centring
+      if (direction)
+      {
+        group_big_centring.moveGroupBySteps(big_centring_steps, LOW, BIG_CENTRING_RIGHT_SPEED);
+      }
+      else
+      {
+        // moveBigCentringRight(group_big_centring);
+        group_big_centring.moveGroupBySteps(big_centring_steps, HIGH, BIG_CENTRING_LEFT_SPEED);
+
+      }
+      break;
+    case 'S': // Small Centring
+      if (direction)
+      {
+        // moveSmallCentringForward(group_small_centring);
+        group_small_centring.moveGroupBySteps(small_centring_steps, LOW, SMALL_CENTRING_BACKWARD_SPEED);
+
+      }
+      else
+      {
+        // moveSmallCentringBack(group_small_centring);
+        group_small_centring.moveGroupBySteps(small_centring_steps, HIGH, SMALL_CENTRING_FORWARD_SPEED);
+      }
+      break;
+    case 'A': // Automated
+      if (direction)
+      {
+        group_small_centring.moveGroupBySteps(small_centring_steps, LOW, SMALL_CENTRING_FORWARD_SPEED);
+        group_big_centring.moveGroupBySteps(big_centring_steps, LOW, BIG_CENTRING_RIGHT_SPEED);
+        group_leveling.moveGroupBySteps(leveling_steps, HIGH, PLATFORM_DOWN_SPEED);
+      }
+      else
+      {
+        group_small_centring.moveGroupBySteps((small_centring_steps*1.2), HIGH, SMALL_CENTRING_FORWARD_SPEED);
+        group_big_centring.moveGroupBySteps(big_centring_steps, HIGH, BIG_CENTRING_LEFT_SPEED);
+        group_leveling.moveGroupBySteps(leveling_steps, LOW, PLATFORM_UP_SPEED);
+      }
+      break;
+    case 'I': // Initialize
+      if (direction){
+        // moveSmallCentringForward(group_small_centring);
+        setupSmallCentring();
+        Serial.println("Steps calculated for small centring: ");
+        Serial.println(small_centring_steps);
+        setupBigCentring();
+        Serial.println("Steps calculated for big centring: ");
+        Serial.println(big_centring_steps);
+        setupLeveling();
+        Serial.println("Steps calculated for leveling: ");
+        Serial.println(leveling_steps);
+      } else {
+        Serial.println("Initialization values: ");
+        Serial.println("Small centring: ");
+        Serial.println(small_centring_steps);
+        Serial.println("Big centring: ");
+        Serial.println(big_centring_steps);
+        Serial.println("Leveling: ");
+        Serial.println(leveling_steps);
+      }
+      break;
+    // case 'R': // Roof
+    //   // Assuming switchMoveRoofOpen() and switchMoveRoofClose() are uncommented and implemented
+    //   if (direction)
+    //   {
+    //     // switchMoveRoofOpen();
+    //   }
+    //   else
+    //   {
+    //     // switchMoveRoofClose();
+    //   }
+    //   break;
+    default:
+      Serial.println("Invalid motor group");
+      break;
+    }
+  }
+}
+
+void setupSmallCentring()
+{
+  unsigned int steps_made = 0;
+  while (digitalRead(small_centring_endst_ind) == HIGH)
+  {
+    group_small_centring.moveGroupBySteps(10, LOW, SMALL_CENTRING_FORWARD_SPEED);
+    steps_made += 10;
+  }
+  small_centring_steps = steps_made;
+  return;
+}
+
+void setupBigCentring()
+{
+  unsigned int steps_made = 0;
+  while (digitalRead(big_centring_front_endst_ind) == HIGH && digitalRead(big_centring_back_endst_ind) == HIGH)
+  {
+    group_big_centring.moveGroupBySteps(10, LOW, BIG_CENTRING_RIGHT_SPEED);
+    steps_made += 10;
+  }
+  big_centring_steps = steps_made;
+  return;
+}
+
+void setupLeveling(){
+  unsigned int steps_made = 0;
+  while (digitalRead(leveling_front_left_endst_ind) == HIGH && digitalRead(leveling_front_right_endst_ind) == HIGH && digitalRead(leveling_back_left_endst_ind) == HIGH && digitalRead(leveling_back_right_endst_ind) == HIGH)
+  {
+    group_leveling.moveGroupBySteps(10, HIGH, PLATFORM_DOWN_SPEED);
+    steps_made += 10;
+  }
+  leveling_steps = steps_made;
+  return;
+}

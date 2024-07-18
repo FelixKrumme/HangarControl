@@ -17,7 +17,14 @@
 #include <Arduino.h>
 
 #define MAX_MOTORS 5
+
 #define DEFAULT_SPEED 1000
+#define SMALL_CENTRING_FORWARD_SPEED 2000
+#define SMALL_CENTRING_BACKWARD_SPEED 2000
+#define BIG_CENTRING_LEFT_SPEED 2000
+#define BIG_CENTRING_RIGHT_SPEED 1750
+#define PLATFORM_UP_SPEED 500
+#define PLATFORM_DOWN_SPEED 700
 //
 // All Positions should be viewed in travelling direction!!!
 //
@@ -26,6 +33,8 @@ extern const int kSupportedMicroStepConfig[15];
 extern const int kStepsPerRotationMicrostepping[15];
 // kMaxSpeed is not known yet, (is probably also different for each motor) lower value means higher speed
 const unsigned int kMaxSpeed = 100;
+// Timeout threshold for the stepper motor in milliseconds.
+const unsigned int kTimeoutThreshold = 5000; // tbd
 
 class StepperMotor
 {
@@ -129,6 +138,7 @@ public:
     void moveGroupByRotations(unsigned int rotations, bool direction, unsigned int speed);
     void moveGroupBySteps(unsigned int steps, bool direction);
     void moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
+    void moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed, bool timeout_active);
     void switchMoveGroupBySteps(unsigned int steps, bool direction, unsigned int speed);
 
     void resetRemainingSteps () {

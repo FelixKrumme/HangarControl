@@ -32,18 +32,18 @@
 // Endstop Pins
 // 50-53 used, 62, 63 used 
 #define big_centring_front_endst_ind 62
-#define big_centring_back_endst_ind 63
+#define big_centring_back_endst_ind 52
 // #define big_centring_endst_mec 12 // Two Mechanical Endstops used in series
 // #define big_centring_front_endst_mec
 // #define big_centring_back_endst_mec
 
-#define small_centring_endst_ind 52
+#define small_centring_endst_ind 63
 // #define small_centring_endst_mec 50
 
-#define leveling_front_left_endst_ind 53
-#define leveling_front_right_endst_ind 51
-#define leveling_back_left_endst_ind 50
-#define leveling_back_right_endst_ind 12
+#define leveling_front_left_endst_ind 12
+#define leveling_front_right_endst_ind 50
+#define leveling_back_left_endst_ind 51
+#define leveling_back_right_endst_ind 53
 // #define leveling_endst_mec  53//  // Four Mechanical Endstops used in series
 // #define leveling_front_left_endst_mec 
 // #define leveling_front_right_endst_mec 

@@ -178,6 +178,163 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction)
 // Register Change Interrupts for the Switch too if it was a switch that triggered the movement
 // Afterwards check if the Endstops are Low (Active) if so use these to consider the position
 // If these are not High (not active) try to calculate the position with the steps made
+// For additional safety this function has a timeout ability to stop the movement which stops after the noraml time needed to make the steps + a threshold
+void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed, bool timeout_active)
+{
+    // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
+    // oder logik mit interrupt (interrupt wenn keine schritte mehr oder endstop erreicht)
+    remaining_steps_ = steps;
+    setGroupSpeed(speed);
+    bool last_direction = direction_;
+    setGroupDirection(direction);
+    bool inverted_direction = direction == LOW ? HIGH : LOW;
+    unsigned long time_needed = (steps * group_speed_ * 2); // Time per step is two pulses, one pulse is group_speed
+    unsigned long timeout = micros() + time_needed + kTimeoutThreshold;
+    // PNP Openers -> High Voltage if no metal is detected
+    // High Voltage -> No Metal -> Interrupt Flag can be set to false
+    // Metal detected -> Low Voltage => Look for Falling Edge
+    // Low Voltage -> Metal detected -> Check if the Movement is in the opposite direction -> If so set the interrupt flag to false -> No need to register the endstop we're moving away from (do it anyways? why not? looking for falling edge and its rising when were moving away)
+    // Mech endstops are used with the NC configuration
+    // High Voltage -> Not activated -> look for falling edge
+    if (group_id_ == motor_group_small_centring)
+    {
+        // One Inductive Endstop/ One Mech to be added
+        if (digitalRead(small_centring_endst_ind) == HIGH)
+        {
+            interrupt_flag_ = false;
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+        }
+        else if (last_direction != direction)
+        {
+            // Movement in opposite direction so movement should be safe
+            interrupt_flag_ = false;
+        }
+        // if(digitalRead(small_centring_endst_mec) == HIGH){
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        // } else if (last_direction != direction)
+        // {
+        //     // Movement in opposite direction so movement should be safe
+        //     interrupt_flag_ = false;
+        // }
+    }
+
+    if (group_id_ == motor_group_big_centring)
+    {
+        // Two Inductive Endstops/ Two Mech to be added
+        if (digitalRead(big_centring_front_endst_ind) == HIGH || digitalRead(big_centring_back_endst_ind) == HIGH)
+        {
+            interrupt_flag_ = false; // Should be remove when mech endstops are added because then they should be checked prior to setting the interrupt flag
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+        }
+        else if (last_direction != direction)
+        {
+            // Movement in opposite direction so movement should be safe
+            interrupt_flag_ = false; // Should be kept when mech endstops are added because the mech will be safe when the inductive ones are triggered
+        }
+        // if(digitalRead(big_centring_front_endst_mec) == HIGH || digitalRead(big_centring_back_endst_mec) == HIGH){
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        // } else if (last_direction != direction)
+        // {
+        //     // Movement in opposite direction so movement should be safe
+        //     interrupt_flag_ = false;
+        // }
+    }
+
+    if (group_id_ == motor_group_leveling)
+    {
+        // Four Inductive Endstops/ Four Mech to be added
+        if (digitalRead(leveling_front_left_endst_ind) == HIGH || digitalRead(leveling_front_right_endst_ind) == HIGH || digitalRead(leveling_back_left_endst_ind) == HIGH || digitalRead(leveling_back_right_endst_ind) == HIGH)
+        {
+            interrupt_flag_ = false;
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_ind), StepperGroup::isrStepperGroup, FALLING);
+        }
+        else if (last_direction != direction)
+        {
+            // Movement in opposite direction so movement should be safe
+            interrupt_flag_ = false;
+        }
+        // if(digitalRead(leveling_front_left_endst_mec) == HIGH || digitalRead(leveling_front_right_endst_mec) == HIGH || digitalRead(leveling_back_left_endst_mec) == HIGH || digitalRead(leveling_back_right_endst_mec) == HIGH){
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_mec), StepperGroup::isrStepperGroup, FALLING);
+        // } else if (last_direction != direction)
+        // {
+        //     // Movement in opposite direction so movement should be safe
+        //     interrupt_flag_ = false;
+        // }
+    }
+
+    while (remaining_steps_ > 0 && !interrupt_flag_)
+    {
+        unsigned long current_time = micros();
+        if (current_time > timeout && timeout_active)
+        {
+            // Timeout reached
+            break;
+        }
+        if (current_time - passed_time_ > (long)group_speed_)
+        {
+            // A Pulse is completed but only 2 Pulses (High + Low) make a step!
+            if (pulse_count_ % 2 == 0)
+            {
+                step_count_++;
+                remaining_steps_--;
+            };
+
+            toggle_pulse_ = toggle_pulse_ == LOW ? HIGH : LOW;
+            for (auto i = 0; i < motor_count_; i++)
+            {
+                // Invert the directions if Motors should turn in other direction. This is determined by the Motor UID
+                if (motors[i]->getMotorUniqueID() % 2 != 0)
+                {
+                    digitalWrite(motors[i]->getMotorDirectionPin(), inverted_direction);
+                }
+                else
+                {
+                    digitalWrite(motors[i]->getMotorDirectionPin(), direction);
+                }
+                digitalWrite(motors[i]->getMotorStepPin(), toggle_pulse_);
+            }
+
+            passed_time_ = current_time;
+        };
+    };
+
+    if (group_id_ == motor_group_small_centring)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_mec));
+    }
+
+    if (group_id_ == motor_group_big_centring)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_front_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(big_centring_back_endst_mec));
+    }
+
+    if (group_id_ == motor_group_leveling)
+    {
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_ind));
+        detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_ind));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_left_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_front_right_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_left_endst_mec));
+        // detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(leveling_back_right_endst_mec));
+    }
+    
+    return;
+};
+
 void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned int speed)
 {
     // while steps are remaining wrap in while loop and use millis logic (compared to delay still will recognize interrupts! Important for endstops)
@@ -198,14 +355,20 @@ void StepperGroup::moveGroupBySteps(unsigned int steps, bool direction, unsigned
         // One Inductive Endstop/ One Mech to be added
         if (digitalRead(small_centring_endst_ind) == HIGH)
         {
+            // Serial.println("Endstop was detected as high");
             interrupt_flag_ = false;
             attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_ind), StepperGroup::isrStepperGroup, FALLING);
         }
         else if (last_direction != direction)
         {
+            // Serial.println("Interrupt flag set to false because of direction change");
             // Movement in opposite direction so movement should be safe
             interrupt_flag_ = false;
+        } else
+        {
+           return;
         }
+        
         // if(digitalRead(small_centring_endst_mec) == HIGH){
         //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(small_centring_endst_mec), StepperGroup::isrStepperGroup, FALLING);
         // } else if (last_direction != direction)
@@ -377,10 +540,10 @@ void StepperGroup::switchMoveGroupBySteps(unsigned int steps, bool direction, un
 
 void moveBigCentringLeft(StepperGroup group_big_centring)
 {
-    int moving_distance = group_big_centring.getEndPosition() - group_big_centring.getPosition();
-    unsigned int steps = round(moving_distance * 11.76);
-    group_big_centring.moveGroupBySteps(steps, HIGH, 3000);
-    group_big_centring.setPosition(group_big_centring.getEndPosition());
+    // int moving_distance = group_big_centring.getEndPosition() - group_big_centring.getPosition();
+    // unsigned int steps = round(moving_distance * 11.76);
+    group_big_centring.moveGroupBySteps(NULL, HIGH, BIG_CENTRING_LEFT_SPEED);
+    // group_big_centring.setPosition(group_big_centring.getEndPosition());
     return;
 };
 
@@ -388,7 +551,7 @@ void moveBigCentringRight(StepperGroup group_big_centring)
 {
     //   int moving_distance = abs(group_big_centring.getPosition() - group_big_centring.getEndPosition());
     //     unsigned int steps = round(moving_distance * 11.76);
-    group_big_centring.moveGroupBySteps(NULL, LOW, 3000);
+    group_big_centring.moveGroupBySteps(NULL, LOW, BIG_CENTRING_RIGHT_SPEED);
     group_big_centring.setPosition(0);
     return;
 };
@@ -401,7 +564,7 @@ void homeBigCentring(StepperGroup group_big_centring)
     // Save steps needed to reach the endstop
     // Move to ind endstops
     // Save steps needed to reach the endstop
-    group_big_centring.moveGroupBySteps(NULL, LOW, 3000);
+    group_big_centring.moveGroupBySteps(NULL, LOW, BIG_CENTRING_RIGHT_SPEED);
     group_big_centring.setPosition(0);
     return;
 };
@@ -413,10 +576,10 @@ void homeBigCentring(StepperGroup group_big_centring)
 
 void moveSmallCentringBack(StepperGroup group_small_centring)
 {
-    int moving_distance = group_small_centring.getEndPosition() - group_small_centring.getPosition();
-    unsigned int steps = round(moving_distance * 11.49);
-    group_small_centring.moveGroupBySteps(steps, HIGH, 3000);
-    group_small_centring.setPosition(group_small_centring.getEndPosition());
+    // int moving_distance = group_small_centring.getEndPosition() - group_small_centring.getPosition();
+    // unsigned int steps = round(moving_distance * 11.49);
+    group_small_centring.moveGroupBySteps(NULL, HIGH, SMALL_CENTRING_BACKWARD_SPEED);
+    // group_small_centring.setPosition(group_small_centring.getEndPosition());
     return;
 };
 
@@ -424,16 +587,16 @@ void moveSmallCentringForward(StepperGroup group_small_centring)
 {
     // int moving_distance = abs(group_small_centring.getPosition() - group_small_centring.getEndPosition());
     // unsigned int steps = round(moving_distance * 11.49);
-    group_small_centring.moveGroupBySteps(11040, LOW, 3000);
-    group_small_centring.setPosition(0);
+    group_small_centring.moveGroupBySteps(NULL, LOW, SMALL_CENTRING_FORWARD_SPEED);
+    // group_small_centring.setPosition(0);
     return;
 };
 
 void homeSmallCentring(StepperGroup group_small_centring)
 {
     // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
-    group_small_centring.moveGroupBySteps(11100, HIGH, 3000);
-    group_small_centring.setPosition(0);
+    group_small_centring.moveGroupBySteps(NULL, LOW, SMALL_CENTRING_FORWARD_SPEED);
+    // group_small_centring.setPosition(0);
     return;
 };
 
@@ -441,10 +604,10 @@ void homeSmallCentring(StepperGroup group_small_centring)
 
 void movePlatformUp(StepperGroup group_leveling)
 {
-    int moving_distance = group_leveling.getEndPosition() - group_leveling.getPosition();
-    unsigned int steps = round(moving_distance * NULL);
-    group_leveling.moveGroupBySteps(steps, LOW, 400);
-    group_leveling.setPosition(group_leveling.getEndPosition());
+    // int moving_distance = group_leveling.getEndPosition() - group_leveling.getPosition();
+    // unsigned int steps = round(moving_distance * NULL);
+    group_leveling.moveGroupBySteps(NULL, LOW, PLATFORM_UP_SPEED);
+    // group_leveling.setPosition(group_leveling.getEndPosition());
     return;
 };
 
@@ -452,16 +615,16 @@ void movePlatformDown(StepperGroup group_leveling)
 {
     // int moving_distance = abs(group_leveling.getPosition() - group_leveling.getEndPosition());
     // unsigned int steps = round(moving_distance * NULL);
-    group_leveling.moveGroupBySteps(NULL, HIGH, 650);
-    group_leveling.setPosition(0);
+    group_leveling.moveGroupBySteps(NULL, HIGH, PLATFORM_DOWN_SPEED);
+    // group_leveling.setPosition(0);
     return;
 };
 
 void homePlatform(StepperGroup group_leveling)
 {
     // Simplified homing which only sets the position to 0 when it runs into the endstop. Could be extended by using the other endstop to calculate the distance
-    group_leveling.moveGroupBySteps(NULL, HIGH, 650);
-    group_leveling.setPosition(0);
+    group_leveling.moveGroupBySteps(NULL, HIGH, PLATFORM_DOWN_SPEED);
+    // group_leveling.setPosition(0);
     return;
 };
 
