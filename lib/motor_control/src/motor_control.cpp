@@ -87,10 +87,12 @@ volatile bool StepperGroup::interrupt_flag_ = false;
 
 StepperGroup::StepperGroup(unsigned int _group_id, unsigned int _speed, bool _direction, int end_position)
 {
+    
     group_id_ = _group_id;
     setGroupSpeed(_speed);
     setGroupDirection(_direction);
     end_position_ = end_position;
+    group_id_ = _group_id;
 };
 
 void StepperGroup::setPosition(int position)
@@ -101,7 +103,7 @@ void StepperGroup::setPosition(int position)
 
 void StepperGroup::setGroupSpeed(unsigned int _speed)
 {
-    if (_speed > kMaxSpeed)
+    if (_speed < kMaxSpeed)
     {
         group_speed_ = _speed;
     }
@@ -116,28 +118,16 @@ void StepperGroup::setGroupSpeed(unsigned int _speed)
     }
 };
 
-void StepperGroup::setGroupDirection(bool _direction)
-{
-    if (_direction == HIGH)
-    {
-        direction_ = HIGH;
-    }
-    else
-    {
-        direction_ = LOW;
-    }
-};
-
 void StepperGroup::addMotor(StepperMotor *motor)
 {
     if (motor_count_ < MAX_MOTORS)
     {
-        if (motor->getMotorGroup() != group_id_)
-        {
-            // Replace with a message through the Communication Interface in serial_communication
-            Serial.println("Motor should not belong to this group or is not set up correctly.");
-            return;
-        };
+        // if (motor->getMotorGroup() != group_id_)
+        // {
+        //     // Replace with a message through the Communication Interface in serial_communication
+        //     Serial.println("Motor should not belong to this group or is not set up correctly.");
+        //     return;
+        // };
         motors[motor_count_] = motor;
         motor_count_++;
         return;
@@ -503,12 +493,30 @@ void StepperGroup::switchMoveGroupBySteps(unsigned int steps, bool direction, un
     setGroupDirection(direction);
     bool inverted_direction = direction == LOW ? HIGH : LOW;
     // No endstop logic need when actions are manually
+  
+    passed_time_ = 0;
+    pulse_count_ = 0;
+    step_count_ = 0;
+    toggle_pulse_ = HIGH;
+    Serial.print("remaining_steps_: ");
+    Serial.println(remaining_steps_);
+    Serial.print("steps: ");
+    Serial.println(steps);
+    group_speed_ = speed;
+    // setGroupSpeed(speed); change line above to this setter (after its fixed)
+    direction_ = direction;
+
+    for (auto i = 0; i < motor_count_; i++)
+            {
+                digitalWrite(motors[i]->getMotorDirectionPin(), direction_);
+            }
 
     while (remaining_steps_ > 0)
     {
         unsigned long current_time = micros();
         if (current_time - passed_time_ > (long)group_speed_)
         {
+            pulse_count_++;
             // A Pulse is completed but only 2 Pulses (High + Low) make a step!
             if (pulse_count_ % 2 == 0)
             {

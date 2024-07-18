@@ -8,7 +8,7 @@
  * to configure the stepper motors.
  *
  * @author FelixKrumme
- * @date 02-06-2024
+ * @date 18-07-2024
  */
 
 #ifndef MOTOR_CONTROL
@@ -47,11 +47,11 @@ private:
     byte motor_uid_;
     unsigned int micro_step_config_;
     unsigned int steps_per_rotation_;
-    unsigned int step_count_ = 0;
+    unsigned int step_count_;
     // unsigned int remaining_steps_ = 0;
-    unsigned int pulse_count_ = 0;
-    unsigned long current_time = 0;
-    unsigned long passed_time_ = 0;
+    unsigned int pulse_count_;
+    unsigned long current_time;
+    unsigned long passed_time_;
     bool direction_ = false;
     bool togglePulse_ = LOW;
 public:
